@@ -143,21 +143,27 @@ prompt_pure_preprompt_render() {
 	preprompt_parts+=('%F{${prompt_pure_colors[path]}}%~%f')
 
 	# Git branch and dirty status info.
+	local -a preprompt_git_parts
+
 	typeset -gA prompt_pure_vcs_info
 	if [[ -n $prompt_pure_vcs_info[branch] ]]; then
-		preprompt_parts+=("%F{$git_color}"'${prompt_pure_vcs_info[branch]}'"%F{$git_dirty_color}"'${prompt_pure_git_dirty}%f')
+		preprompt_git_parts+=("%F{$git_color}"'${prompt_pure_vcs_info[branch]}'"%F{$git_dirty_color}"'${prompt_pure_git_dirty}%f')
 	fi
 	# Git action (for example, merge).
 	if [[ -n $prompt_pure_vcs_info[action] ]]; then
-		preprompt_parts+=("%F{$prompt_pure_colors[git:action]}"'$prompt_pure_vcs_info[action]%f')
+		preprompt_git_parts+=("%F{$prompt_pure_colors[git:action]}"'$prompt_pure_vcs_info[action]%f')
 	fi
 	# Git pull/push arrows.
 	if [[ -n $prompt_pure_git_arrows ]]; then
-		preprompt_parts+=('%F{$prompt_pure_colors[git:arrow]}${prompt_pure_git_arrows}%f')
+		preprompt_git_parts+=('%F{$prompt_pure_colors[git:arrow]}${prompt_pure_git_arrows}%f')
 	fi
 	# Git stash symbol (if opted in).
 	if [[ -n $prompt_pure_git_stash ]]; then
-		preprompt_parts+=('%F{$prompt_pure_colors[git:stash]}${PURE_GIT_STASH_SYMBOL:-≡}%f')
+		preprompt_git_parts+=('%F{$prompt_pure_colors[git:stash]}${PURE_GIT_STASH_SYMBOL:-≡}%f')
+	fi
+
+	if [[ ${#preprompt_git_parts[@]} -gt 0 ]]; then
+		preprompt_parts+=("‹" $preprompt_git_parts "›")
 	fi
 
 	# Execution time.
@@ -704,7 +710,7 @@ prompt_pure_state_setup() {
 		unset MATCH MBEGIN MEND
 	fi
 
-	hostname='%F{$prompt_pure_colors[host]}@%m%f'
+	hostname='%F{$prompt_pure_colors[host]}@${HOSTALIAS:=%m}%f'
 	# Show `username@host` if logged in through SSH.
 	[[ -n $ssh_connection ]] && username='%F{$prompt_pure_colors[user]}%n%f'"$hostname"
 
@@ -854,7 +860,7 @@ prompt_pure_setup() {
 	PROMPT='%(12V.%F{$prompt_pure_colors[virtualenv]}%12v%f .)'
 
 	# Prompt turns red if the previous command didn't exit with 0.
-	local prompt_indicator='%(?.%F{$prompt_pure_colors[prompt:success]}.%F{$prompt_pure_colors[prompt:error]})${prompt_pure_state[prompt]}%f '
+	local prompt_indicator='%(?.%F{$prompt_pure_colors[prompt:success]}.%F{$prompt_pure_colors[prompt:error]})${prompt_pure_state[prompt]}%f '
 	PROMPT+=$prompt_indicator
 
 	# Indicate continuation prompt by … and use a darker color for it.
